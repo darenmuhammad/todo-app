@@ -10,18 +10,27 @@ const titleInput = document.getElementById('title-input');
 const dateInput = document.getElementById('date-input');
 const descriptionInput = document.getElementById('description-input');
 
-const taskData = [];
+const taskData = JSON.parse(localStorage.getItem("data")) || [];
 let currentTask = {};
 
+const removeSpecialChars = string => {
+    return string.trim().replace(/[^A-Za-z0-9\-\s]/g, '')
+};
+
 const addOrUpdateTask = () => {
+    if (!titleInput.value.trim()) {
+        alert("Please provide a title");
+        return;
+    }
+
     // to find same index, if it's none then it'll be return -1 value
     const dataArrIndex = taskData.findIndex((item) => item.id === currentTask.id);
 
     const taskObj = {
-        id: `${titleInput.value.toLowerCase().split(" ").join("-")}-${Date.now()}`,
-        title: titleInput.value,
+        id: `${removeSpecialChars(titleInput.value).toLowerCase().split(" ").join("-")}-${Date.now()}`,
+        title: removeSpecialChars(titleInput.value),
         date: dateInput.value,
-        description: descriptionInput.value,
+        description: removeSpecialChars(descriptionInput.value),
     };
 
     // if there's no match index it'll be save to taskData
@@ -30,6 +39,8 @@ const addOrUpdateTask = () => {
     } else {
         taskData[dataArrIndex] = taskObj;
     }
+
+    localStorage.setItem("data", JSON.stringify(taskData));
 
     updateTaskContainer();
     reset();
@@ -58,6 +69,8 @@ const deleteTask = (buttonEl) => {
     buttonEl.parentElement.remove();
     // to delete one index, namely array index 0 
     taskData.splice(dataArrIndex, 1);
+    // already splice the data, so just need to setItem
+    localStorage.setItem("data", JSON.stringify(taskData));
 }
 
 const editTask = (buttonEl) => {
@@ -75,11 +88,16 @@ const editTask = (buttonEl) => {
 }
 
 const reset = () => {
+    addOrUpdateTaskBtn.innerText = "Add Task";
     titleInput.value = '';
     dateInput.value = '';
     descriptionInput.value = '';
     taskForm.classList.toggle("hidden");
     currentTask = {};
+}
+
+if (taskData.length) {
+    updateTaskContainer();
 }
 
 openTaskFormBtn.addEventListener("click", () => {
